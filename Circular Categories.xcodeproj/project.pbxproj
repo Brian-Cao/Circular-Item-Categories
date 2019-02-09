@@ -14,6 +14,7 @@
 		A7717B92220D4DED0069F7EC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A7717B90220D4DED0069F7EC /* LaunchScreen.storyboard */; };
 		A7717B9D220D4DED0069F7EC /* Circular_CategoriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7717B9C220D4DED0069F7EC /* Circular_CategoriesTests.swift */; };
 		A7717BA8220D4DEE0069F7EC /* Circular_CategoriesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7717BA7220D4DEE0069F7EC /* Circular_CategoriesUITests.swift */; };
+		A7717BB9220E16AD0069F7EC /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7717BB8220E16AD0069F7EC /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,7 @@
 		A7717BA3220D4DEE0069F7EC /* Circular CategoriesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Circular CategoriesUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7717BA7220D4DEE0069F7EC /* Circular_CategoriesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Circular_CategoriesUITests.swift; sourceTree = "<group>"; };
 		A7717BA9220D4DEE0069F7EC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A7717BB8220E16AD0069F7EC /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7717BB9220E16AD0069F7EC /* QuartzCore.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,6 +84,7 @@
 				A7717B9B220D4DED0069F7EC /* Circular CategoriesTests */,
 				A7717BA6220D4DEE0069F7EC /* Circular CategoriesUITests */,
 				A7717B85220D4DE80069F7EC /* Products */,
+				A7717BB7220E16AD0069F7EC /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -123,6 +127,14 @@
 				A7717BA9220D4DEE0069F7EC /* Info.plist */,
 			);
 			path = "Circular CategoriesUITests";
+			sourceTree = "<group>";
+		};
+		A7717BB7220E16AD0069F7EC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A7717BB8220E16AD0069F7EC /* QuartzCore.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
