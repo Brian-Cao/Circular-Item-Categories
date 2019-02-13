@@ -60,9 +60,11 @@ class BCRotatingButton: UIButton{
         self.action = action
         super.init(frame: CGRect(x: 0, y: 0, width: radius * 2, height: radius * 2))
         isUserInteractionEnabled = true
-        self.setImage(UIImage(named: imageName), for: .normal)
+        setImage(UIImage(named: imageName), for: .normal)
         layer.cornerRadius = min(self.frame.size.height, self.frame.size.width) / 2.0
         clipsToBounds = true
+        
+    
         center = circle.pointOnCircle(angle: currentAngle)
         backgroundColor = .blue
         
@@ -73,7 +75,11 @@ class BCRotatingButton: UIButton{
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
+    override var collisionBoundsType: UIDynamicItemCollisionBoundsType{
+        return .ellipse
+    }
+    
     @objc func touched(){
         action()
     }
@@ -89,6 +95,36 @@ class BCRotatingButton: UIButton{
 
 }
 
+class BCCircleButton: UIButton {
+    
+    var action: () -> Void
+    init(imageNamed imageName: String, action: @escaping () -> Void, radius: CGFloat) {
+        self.action = action
+        super.init(frame: CGRect(x: 0, y: 0, width: radius * 2, height: radius * 2))
+        isUserInteractionEnabled = true
+        setImage(UIImage(named: imageName), for: .normal)
+        layer.cornerRadius = min(self.frame.size.height, self.frame.size.width) / 2.0
+        clipsToBounds = true
+        
+        
+        addTarget(self, action: #selector(self.touched), for: .touchUpInside)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var collisionBoundsType: UIDynamicItemCollisionBoundsType{
+        return .ellipse
+    }
+    
+    @objc func touched(){
+        action()
+    }
+    
+}
+
+
 class BCCircularCategory: UIView{
     let interCircleRadius: CGFloat
     let outerCircleRadius: CGFloat
@@ -100,6 +136,8 @@ class BCCircularCategory: UIView{
     var beginningAngle: CGFloat!
     var snap: UISnapBehavior!
     
+    var collision = UICollisionBehavior()
+    
     init(interCircleRadius: CGFloat, outerCircleRadius: CGFloat) {
         self.interCircleRadius = interCircleRadius
         self.outerCircleRadius = outerCircleRadius
@@ -109,29 +147,16 @@ class BCCircularCategory: UIView{
         
         animator = UIDynamicAnimator(referenceView: self)
         
-        let interCircle = UIButton(frame: CGRect(x: 0, y: 0, width: interCircleRadius*2, height: interCircleRadius*2))
-        interCircle.layer.cornerRadius = min(interCircle.frame.size.height, interCircle.frame.size.width) / 2.0
-        interCircle.center = self.center
-        interCircle.clipsToBounds = true
-        interCircle.isUserInteractionEnabled = true
+        let interCircle = BCCircleButton(imageNamed: "testimage", action: {}, radius: interCircleRadius)
+        interCircle.center = center
         interCircle.backgroundColor = .red
         self.addSubview(interCircle)
         
+        animator.addBehavior(collision)
         
-//        for i in 0...numberOfOuterCircles - 1 {
-//            let angleBetweenViews = (2 * Double.pi) / Double(numberOfOuterCircles)
-//            let circleRadius = interCircleRadius + outerCircleRadius + 5
-//            circle = BCCircle(center: self.center, radius: circleRadius)
-//            let viewOnCircle = BCRotatingView(circle: circle, angle: CGFloat(Double(i) * angleBetweenViews), radius: outerCircleRadius)
-//
-//            rotatingViews.append(viewOnCircle)
-//            self.addSubview(viewOnCircle)
-//
-//
-//
-//            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(didPan(panGesture:)))
-//            viewOnCircle.addGestureRecognizer(panGesture)
-//        }
+        collision.addBoundary(withIdentifier: "innerCircle" as NSCopying, for: UIBezierPath(ovalIn: interCircle.frame))
+        
+        
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -141,17 +166,21 @@ class BCCircularCategory: UIView{
     func addOuterCircleButton(imageNamed imageName: String, action: @escaping () -> Void){
         
         circle = BCCircle(center: self.center, radius: interCircleRadius + outerCircleRadius + 5)
-        
         numberOfOuterCircles += 1
         let angleBetweenViews = (2 * CGFloat.pi) / CGFloat(numberOfOuterCircles)
         let viewOnCircle = BCRotatingButton(imageNamed: imageName, action: action, circle: circle, radius: outerCircleRadius)
         rotatingViews.append(viewOnCircle)
+   
         for i in 0...rotatingViews.count - 1 {
             rotatingViews[i].updateAngle(angle: CGFloat(i) * angleBetweenViews)
+            animator.updateItem(usingCurrentState: rotatingViews[i])
         }
-        
-       
+
         self.addSubview(viewOnCircle)
+        
+        collision.addItem(viewOnCircle)
+        
+        //collision.addBoundary(withIdentifier: "inerCircle" as NSCopying, for: UIBezierPath(ovalIn: viewOnCircle.frame))
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(didPan(panGesture:)))
         viewOnCircle.addGestureRecognizer(panGesture)
     }
@@ -162,35 +191,52 @@ class BCCircularCategory: UIView{
         let view = panGesture.view!
         
         if view is BCRotatingButton{
-            
             let pannedView = view as! BCRotatingButton
-            
             switch panGesture.state {
                 
             case .began:
+                if snap != nil {
+                    animator.removeBehavior(snap)
+                }
+                
                 beginningLocation = pannedView.center
                 beginningAngle = pannedView.currentAngle
-                
+                animator.updateItem(usingCurrentState: pannedView)
             case .changed:
                 pannedView.center = panGesture.location(in: self)
                 let angleDifference = circle.angleBetween(firstPoint: beginningLocation, secondPoint: panGesture.location(in: self))
                 for view in rotatingViews {
                     if(view != pannedView){
                         view.updatePosition(angle: angleDifference)
+                        
+                        animator.updateItem(usingCurrentState: view)
                     }
                 }
                 beginningLocation = panGesture.location(in: self)
-                
+                animator.updateItem(usingCurrentState: pannedView)
             case .ended:
-                if snap != nil {
-                    animator.removeBehavior(snap)
-                }
+                
                 let firstPoint = circle.pointOnCircle(angle: beginningAngle)
                 let angleDifference = circle.angleBetween(firstPoint: firstPoint, secondPoint: panGesture.location(in: self))
+                
                 let snapLocation = circle.pointOnCircle(angle: beginningAngle + angleDifference)
+                
                 snap = UISnapBehavior(item: pannedView, snapTo: snapLocation)
-                pannedView.currentAngle += angleDifference
                 animator.addBehavior(snap)
+                
+//                for view in rotatingViews {
+//                    if view != pannedView{
+////                        if snap != nil {
+////                            animator.removeBehavior(snap)
+////                        }
+//                        snap = UISnapBehavior(item: view, snapTo: view.center)
+//                        animator.addBehavior(snap)
+//                    }
+//                }
+                
+                animator.updateItem(usingCurrentState: pannedView)
+                pannedView.currentAngle += angleDifference
+                
                 
             default:
                 break
