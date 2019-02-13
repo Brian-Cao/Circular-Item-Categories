@@ -15,7 +15,7 @@ class ViewController: UIViewController {
         
         self.view.layoutIfNeeded()
     
-        let circleCategory = BCCircularCategory(interCircleRadius: 75, outerCircleRadius: 50)
+        let circleCategory = BCCircularCategory(interCircleRadius: 60, outerCircleRadius: 75)
         circleCategory.addOuterCircleButton(imageNamed: "testimage", action: {})
         circleCategory.addOuterCircleButton(imageNamed: "testimage", action: {})
         circleCategory.addOuterCircleButton(imageNamed: "testimage", action: {})
@@ -23,6 +23,7 @@ class ViewController: UIViewController {
         circleCategory.addOuterCircleButton(imageNamed: "testimage", action: {})
         circleCategory.addOuterCircleButton(imageNamed: "testimage", action: {})
         circleCategory.addOuterCircleButton(imageNamed: "testimage", action: {})
+        
         self.view.addSubview(circleCategory)
         circleCategory.center = view.center
     }
@@ -51,7 +52,7 @@ struct BCCircle {
 
 class BCRotatingButton: UIButton{
     var currentAngle: CGFloat = 0
-    let circle: BCCircle
+    var circle: BCCircle
     var action: () -> Void
 
     init(imageNamed imageName: String, action: @escaping () -> Void , circle: BCCircle, radius: CGFloat) {
@@ -128,7 +129,7 @@ class BCCircleButton: UIButton {
 class BCCircularCategory: UIView{
     let interCircleRadius: CGFloat
     let outerCircleRadius: CGFloat
-    var numberOfOuterCircles = 0
+   
     var rotatingViews = [BCRotatingButton]()
     var animator: UIDynamicAnimator!
     var circle: BCCircle!
@@ -164,14 +165,24 @@ class BCCircularCategory: UIView{
     }
     
     func addOuterCircleButton(imageNamed imageName: String, action: @escaping () -> Void){
+       
+       
+        // intercircle radius, outercircle radius, number of outer circles
         
-        circle = BCCircle(center: self.center, radius: interCircleRadius + outerCircleRadius + 5)
-        numberOfOuterCircles += 1
-        let angleBetweenViews = (2 * CGFloat.pi) / CGFloat(numberOfOuterCircles)
+        // Update circle based on new number of outerCircles
+        let radius = ((outerCircleRadius * CGFloat(2 * rotatingViews.count + 1))/(CGFloat.pi))/1.5
+        circle = BCCircle(center: self.center, radius: radius)
+        
+        // Update angleBetweenViews based on new number of outerCircles
+        let angleBetweenViews = (2 * CGFloat.pi) / CGFloat(rotatingViews.count + 1)
+        
+        // Add new rotatingButton
         let viewOnCircle = BCRotatingButton(imageNamed: imageName, action: action, circle: circle, radius: outerCircleRadius)
         rotatingViews.append(viewOnCircle)
    
+        // Update old buttons
         for i in 0...rotatingViews.count - 1 {
+            rotatingViews[i].circle = circle
             rotatingViews[i].updateAngle(angle: CGFloat(i) * angleBetweenViews)
             animator.updateItem(usingCurrentState: rotatingViews[i])
         }
@@ -180,7 +191,6 @@ class BCCircularCategory: UIView{
         
         collision.addItem(viewOnCircle)
         
-        //collision.addBoundary(withIdentifier: "inerCircle" as NSCopying, for: UIBezierPath(ovalIn: viewOnCircle.frame))
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(didPan(panGesture:)))
         viewOnCircle.addGestureRecognizer(panGesture)
     }
@@ -223,16 +233,15 @@ class BCCircularCategory: UIView{
                 
                 snap = UISnapBehavior(item: pannedView, snapTo: snapLocation)
                 animator.addBehavior(snap)
-                
-//                for view in rotatingViews {
-//                    if view != pannedView{
-////                        if snap != nil {
-////                            animator.removeBehavior(snap)
-////                        }
-//                        snap = UISnapBehavior(item: view, snapTo: view.center)
-//                        animator.addBehavior(snap)
-//                    }
-//                }
+                for view in rotatingViews {
+                    if view != pannedView{
+//                        if snap != nil {
+//                            animator.removeBehavior(snap)
+//                        }
+                        snap = UISnapBehavior(item: view, snapTo: view.center)
+                        animator.addBehavior(snap)
+                    }
+                }
                 
                 animator.updateItem(usingCurrentState: pannedView)
                 pannedView.currentAngle += angleDifference
